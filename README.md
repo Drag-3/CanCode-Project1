@@ -41,31 +41,37 @@ Total: `NA`
 
 # Results
 Set 1 user enters the values: `[12, 3.5, hello, True, 7, 10]`  
-`Dataset 1: [12.0, 3.5, 7.0, 10.0]  
+```
+Dataset 1: [12.0, 3.5, 7.0, 10.0]  
 ==================================================  
 Mean: 8.125  
 Median: 8.5  
 Mode: N/A  
 Total: 32.5  
-==================================================` 
+==================================================
+``` 
 
 Set 2 user enters the values: `[hello, bye, hello, hello, cat, dog, danger, True, 13]`
-`Dataset 2: ['hello', 'bye', 'hello', 'hello', 'cat', 'dog', 'danger']  
+```
+Dataset 2: ['hello', 'bye', 'hello', 'hello', 'cat', 'dog', 'danger']  
 ==================================================  
 Mean: N/A  
 Median: ['dog']  
 Mode: hello Count = 3.  
 Total: hellobyehellohellocatdogdanger  
-==================================================`
+==================================================
+```
 
 Set 3 user enters that values: `[True, cat, False, True, 10.5, False, True]`  
-`Dataset 3: [True, False, True, False, True]  
+```
+Dataset 3: [True, False, True, False, True]  
 ==================================================   
 Mean: N/A    
 Median: N/A    
 Mode: True    
 Total: N/A     
-==================================================`
+==================================================
+```
 
 
 # Included
