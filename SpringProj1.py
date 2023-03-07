@@ -31,6 +31,14 @@ def get_user_data(amount: int = 3) -> list:
     return data_list
 
 
+def numeric(string: str) -> bool:
+    try:
+        float(string)
+        return True
+    except ValueError:
+        return False
+
+
 def validate_user_data() -> list:
     """
     A function that prompts the user to input a set of data,
@@ -40,13 +48,13 @@ def validate_user_data() -> list:
     usr_series = []
     end = False
     datatype = None
-
+    bool_tup = ('false', 'true', 't', 'f')
     while datatype is None:  # Loop until user enters a valid dataset
         usr_input = input("Enter an element for the set. > ")
-        if usr_input.isnumeric():
+        if numeric(usr_input):
             datatype = float
             usr_series.append(float(usr_input))
-        elif usr_input.lower() in ('false', 'true', 't', 'f'):
+        elif usr_input.lower() in bool_tup:
             datatype = bool
             usr_series.append(True if usr_input.lower() in ('true', 't') else False)
         elif usr_input == "":
@@ -57,16 +65,16 @@ def validate_user_data() -> list:
 
     while not end:
         usr_input = input("Enter an element for the set. > ")
-        if usr_input.isnumeric() and datatype is float:
+        if numeric(usr_input) and datatype is float:
             usr_series.append(float(usr_input))
-        elif usr_input.lower() in ('false', 'true', 't', 'f') and datatype is bool:
+        elif usr_input.lower() in bool_tup and datatype is bool:
             usr_series.append(True if usr_input.lower() in ('true', 't') else False)
         elif usr_input == "":
             if len(usr_series) < 3:
                 print("You need at least 3 elements to quit!")
             else:
                 end = True
-        elif datatype is str and not usr_input.isnumeric():
+        elif datatype is str and not numeric(usr_input) and usr_input.lower() not in bool_tup[:2]:  # Only full bool
             usr_series.append(usr_input)
         else:
             print(f"Invalid datatype. dtype = {datatype}")
@@ -91,7 +99,11 @@ def process_user_data(dataset: list) -> dict:
         dataset = pd.Series(dataset)
         results['mean'] = dataset.mean()
         results['median'] = dataset.median()
-        results['mode'] = list(dataset.mode())
+        mode = list(dataset.mode())
+        if len(mode) != 1:
+            results['mode'] = None
+        else:
+            results['mode'] = "".join(mode)
         results['total'] = dataset.sum()
     elif datatype is bool:  # Only mode is valid
         t_c = f_c = 0
@@ -102,13 +114,15 @@ def process_user_data(dataset: list) -> dict:
                 f_c += 1
         if t_c > f_c:
             results['mode'] = True
-        else:
+        elif f_c > t_c:
             results['mode'] = False
+        else:
+            results['mode'] = None
     else:  # For Strings
         sorted_dataset = sorted(dataset)
         length = len(sorted_dataset)
         # Calculate the median element(s)
-        if length % 2:
+        if length % 2 == 0:
             x = length // 2
             mid = [x-1, x]
         else:
@@ -138,14 +152,18 @@ def process_user_data(dataset: list) -> dict:
                     maximum.append((key, value))
                 else:
                     pass
-        maxstring = ""
-        for i in range(len(maximum)):  # Create a user readable string about the mode
-            maxstring += str(maximum[i][0])
-            if i < len(maximum) - 1:
-                maxstring += ", "
-            else:
-                maxstring += f" Count = {maximum[i][1]}."
-        results['mode'] = maxstring if maxstring != "" else None
+
+        if len(maximum) != 1:  # If multiple elements have the same count, then the mode does not exist
+            results['mode'] = None
+        else:
+            maxstring = ""
+            for i in range(len(maximum)):  # Create a user readable string about the mode
+                maxstring += str(maximum[i][0])
+                if i < len(maximum) - 1:
+                    maxstring += ", "
+                else:
+                    maxstring += f" Count = {maximum[i][1]}."
+            results['mode'] = maxstring if maxstring != "" else None
 
         results['total'] = "".join(dataset)  # Just concatenate the strings
     return results
