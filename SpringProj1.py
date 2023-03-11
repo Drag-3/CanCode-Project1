@@ -96,77 +96,92 @@ def process_user_data(dataset: list) -> dict:
         'total': None
     }
     if datatype is float:  # Easiest to use pd functions
-        dataset = pd.Series(dataset)
-        results['mean'] = dataset.mean()
-        results['median'] = dataset.median()
-        mode = list(dataset.mode())
-        if len(mode) != 1:
-            results['mode'] = None
-        else:
-            results['mode'] = "".join(mode)
-        results['total'] = dataset.sum()
+        results['mean'], results['median'], results['mode'], results['total'] = float_stats(dataset)
     elif datatype is bool:  # Only mode is valid
-        t_c = f_c = 0
-        for elem in dataset:  # count the True count and the False count
-            if elem:
-                t_c += 1
-            else:
-                f_c += 1
-        if t_c > f_c:
-            results['mode'] = True
-        elif f_c > t_c:
-            results['mode'] = False
-        else:
-            results['mode'] = None
+        results['mode'] = bool_stats(dataset)
     else:  # For Strings
-        sorted_dataset = sorted(dataset)
-        length = len(sorted_dataset)
-        # Calculate the median element(s)
-        if length % 2 == 0:
-            x = length // 2
-            mid = [x-1, x]
+        results['median'], results['mode'], results['total'] = string_stats(dataset)
+    return results
+
+
+def string_stats(dataset: list) -> tuple:
+    median = string_median(dataset)
+    # Calculate the mode. if multiple have the same amount, they are both in the mode
+    mode = string_mode(dataset)
+    total = "".join(dataset)  # Just concatenate the strings
+    return median, mode, total
+
+
+def string_mode(dataset: list) -> str | None:
+    counts = {}
+    for elem in dataset:  # Store each element and their count in a dict
+        if (counts.get(elem)) is not None:
+            counts[elem] += 1
         else:
-            mid = [length // 2]
-        res = []
-        for elem in mid:
-            res.append(sorted_dataset[elem])
-        results['median'] = res
-
-        # Calculate the mode. if multiple have the same amount, they are both in the mode
-        counts = {}
-        for elem in dataset:  # Store each element and their count in a dict
-            if (counts.get(elem)) is not None:
-                counts[elem] += 1
-            else:
-                counts[elem] = 1
-
-        maximum = []
-        for key, value in counts.items():  # Calculate the one with the most occurrences and place in a list
-            if len(maximum) == 0:
+            counts[elem] = 1
+    maximum = []
+    for key, value in counts.items():  # Calculate the one with the most occurrences and place in a list
+        if len(maximum) == 0:
+            maximum.append((key, value))
+        else:
+            if maximum[0][1] < value:  # Clear the list as this is above all elements currently in the list
+                maximum.clear()
+                maximum.append((key, value))
+            elif maximum[0][1] == value:  # Add the element to the list
                 maximum.append((key, value))
             else:
-                if maximum[0][1] < value:  # Clear the list as this is above all elements currently in the list
-                    maximum.clear()
-                    maximum.append((key, value))
-                elif maximum[0][1] == value:  # Add the element to the list
-                    maximum.append((key, value))
-                else:
-                    pass
+                pass
+    if len(maximum) != 1:  # If multiple elements have the same count, then the mode does not exist
+        return None
+    else:  # Create a user readable string about the mode
+        maxstring = ""
+        maxstring += str(maximum[0][0])
+        maxstring += f" Count = {maximum[0][1]}."
+        return maxstring
 
-        if len(maximum) != 1:  # If multiple elements have the same count, then the mode does not exist
-            results['mode'] = None
+
+def string_median(dataset: list) -> list:
+    sorted_dataset = sorted(dataset)
+    length = len(sorted_dataset)
+    # Calculate the median element(s)
+    if length % 2 == 0:
+        x = length // 2
+        mid = [x - 1, x]
+    else:
+        mid = [length // 2]
+    res = []
+    for elem in mid:
+        res.append(sorted_dataset[elem])
+    return res
+
+
+def bool_stats(dataset: list) -> bool | None:
+    t_c = f_c = 0
+    for elem in dataset:  # count the True count and the False count
+        if elem:
+            t_c += 1
         else:
-            maxstring = ""
-            for i in range(len(maximum)):  # Create a user readable string about the mode
-                maxstring += str(maximum[i][0])
-                if i < len(maximum) - 1:
-                    maxstring += ", "
-                else:
-                    maxstring += f" Count = {maximum[i][1]}."
-            results['mode'] = maxstring if maxstring != "" else None
+            f_c += 1
+    if t_c > f_c:
+        mode = True
+    elif f_c > t_c:
+        mode = False
+    else:
+        mode = None
+    return mode
 
-        results['total'] = "".join(dataset)  # Just concatenate the strings
-    return results
+
+def float_stats(dataset: list) -> tuple:
+    dataset = pd.Series(dataset)
+    mean = dataset.mean()
+    median = dataset.median()
+    mode = list(dataset.mode())
+    if len(mode) != 1:
+        mode = None
+    else:
+        mode = "".join(mode)
+    total = dataset.sum()
+    return mean, median, mode, total
 
 
 def print_results(result: dict):
